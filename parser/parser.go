@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"github.com/tiny-ci/core/types"
-	"gopkg.in/yaml.v2"
+    "github.com/tiny-ci/core/types"
+    "gopkg.in/yaml.v2"
 )
 
 func ParsePipeConfig(content []byte) (*types.PipeConfig, error) {

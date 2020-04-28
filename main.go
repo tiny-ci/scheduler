@@ -2,10 +2,10 @@ package main
 
 import (
     "encoding/json"
-	"log"
-	"github.com/tiny-ci/core/parser"
-	"github.com/tiny-ci/core/pipeconf"
-	"github.com/tiny-ci/core/schema"
+    "log"
+    "github.com/tiny-ci/core/parser"
+    "github.com/tiny-ci/core/pipeconf"
+    "github.com/tiny-ci/core/schema"
 )
 
 func main() {
