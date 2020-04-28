@@ -1,52 +1,40 @@
 package main
 
 import (
-    "io"
-    "os"
-    "log"
-    "github.com/go-git/go-billy/v5/memfs"
-    "github.com/go-git/go-git/v5"
-    "github.com/go-git/go-git/v5/storage/memory"
-    "github.com/go-git/go-git/v5/plumbing"
+	"log"
+	"gopkg.in/yaml.v2"
+	"github.com/tiny-ci/core/pipeconf"
 )
 
+type Config struct {
+    Jobs []struct {
+        Name  string      `yaml:"name"`
+        Image string      `yaml:"image"`
+        Steps interface{} `yaml:"steps"`
+        When  struct {
+            Branch interface{} `yaml:"branch"`
+            Tag    string      `yaml:"tag"`
+        }
+    }
+}
+
 func main() {
-    fs := memfs.New()
-    storer := memory.NewStorage()
-
-    reference := plumbing.NewBranchReferenceName("master")
-
-    log.Println("clonning repository in memory")
-    repo, err := git.Clone(storer, fs, &git.CloneOptions{
-        URL: "https://github.com/tiny-ci/example",
-        ReferenceName: reference,
-        SingleBranch: true,
-        Depth: 50,
-        Tags: git.NoTags,
+    configContent, err := pipeconf.Fetch(&pipeconf.GitRef{
+        Name: "master",
+        URL:  "https://github.com/tiny-ci/example",
+        Hash: "dba8a3250ff364a8a1ccfe0ca0b1bdeb43adadcb",
+        IsTag: false,
     })
 
     if err != nil {
         log.Fatal(err)
     }
 
-    worktree, err := repo.Worktree()
+    config := Config{}
+    err = yaml.Unmarshal(configContent.Bytes(), &config)
     if err != nil {
         log.Fatal(err)
     }
 
-    err = worktree.Checkout(&git.CheckoutOptions{
-        Hash: plumbing.NewHash("dba8a3250ff364a8a1ccfe0ca0b1bdeb43adadcb"),
-    })
-
-    if err != nil {
-        log.Println("cannot checkout")
-        log.Fatal(err)
-    }
-
-    config, err := fs.Open(".tyci.yml")
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    io.Copy(os.Stdout, config)
+    log.Println(config.Jobs[0].When.Tag)
 }
