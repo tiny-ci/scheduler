@@ -1,22 +1,12 @@
 package main
 
 import (
+    "encoding/json"
 	"log"
-	"gopkg.in/yaml.v2"
+	"github.com/tiny-ci/core/parser"
 	"github.com/tiny-ci/core/pipeconf"
+	"github.com/tiny-ci/core/schema"
 )
-
-type Config struct {
-    Jobs []struct {
-        Name  string      `yaml:"name"`
-        Image string      `yaml:"image"`
-        Steps interface{} `yaml:"steps"`
-        When  struct {
-            Branch interface{} `yaml:"branch"`
-            Tag    string      `yaml:"tag"`
-        }
-    }
-}
 
 func main() {
     configContent, err := pipeconf.Fetch(&pipeconf.GitRef{
@@ -30,9 +20,22 @@ func main() {
         log.Fatal(err)
     }
 
-    config := Config{}
-    err = yaml.Unmarshal(configContent.Bytes(), &config)
+    config, err := parser.ParsePipeConfig(configContent.Bytes())
     if err != nil {
+        log.Println("parser error")
+        log.Fatal(err)
+    }
+
+    var marshalledConfig []byte
+    marshalledConfig, err = json.Marshal(config)
+    if err != nil {
+        log.Println("marshall error")
+        log.Fatal(err)
+    }
+
+    err = schema.ValidateConfig(marshalledConfig)
+    if err != nil {
+        log.Println("validation error")
         log.Fatal(err)
     }
 
