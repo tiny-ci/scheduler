@@ -2,3 +2,6 @@
 
 build:
 	go build
+
+bundle:
+	GOOS=linux go build
