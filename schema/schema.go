@@ -15,6 +15,7 @@ var configSchema = []byte(`{
         "jobs": {
             "type": "array",
             "minItems": 1,
+            "maxItems": 10,
             "items": {
                 "type": "object",
                 "required": ["name", "image", "steps"],
@@ -30,10 +31,15 @@ var configSchema = []byte(`{
                         ]
                     },
                     "when": {
-                        "type": "object",
+                        "anyOf": [ { "type": "null" }, { "type": "object" } ],
                         "anyOf": [ { "required": ["tag"] }, { "required": ["branch"] } ],
                         "properties": {
-                            "tag": { "type": "string" },
+                            "tag": {
+                                "anyOf": [
+                                    { "type": "string" },
+                                    { "type": "array", "items": { "type": "string" } }
+                                ]
+                            },
                             "branch": {
                                 "anyOf": [
                                     { "type": "string" },
