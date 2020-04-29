@@ -1,4 +1,4 @@
-package pipeconf
+package pipe
 
 import (
     "bytes"
