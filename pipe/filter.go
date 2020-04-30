@@ -2,6 +2,7 @@ package pipe
 
 import (
     "fmt"
+    "strings"
     "github.com/tiny-ci/core/types"
 )
 
@@ -37,7 +38,7 @@ func appendJob(jobs *[]types.Job, pipeJob *types.PipeJob) {
     })
 }
 
-func Filter(config *types.PipeConfig, ref string) []types.Job {
+func Filter(config *types.PipeConfig, ref string) ([]types.Job, error) {
     matchedJobs := []types.Job{}
 
     for _, pipeJob := range config.Jobs {
@@ -60,17 +61,23 @@ func Filter(config *types.PipeConfig, ref string) []types.Job {
             conditionals = append(conditionals, toStringSlice(pipeJob.When.Tag)...)
         }
 
-        hasMatch := false
         for _, cond := range conditionals {
             if ref == cond {
                 appendJob(&matchedJobs, &pipeJob)
-                hasMatch = true
                 break
             }
-        }
 
-        if hasMatch { continue }
+            if strings.HasPrefix(cond, "\\") {
+                hasMatch, err := EvalExpr(cond, ref)
+                if err != nil { return nil, err }
+
+                if hasMatch {
+                    appendJob(&matchedJobs, &pipeJob)
+                    break
+                }
+            }
+        }
     }
 
-    return matchedJobs
+    return matchedJobs, nil
 }
