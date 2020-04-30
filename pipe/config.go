@@ -16,11 +16,19 @@ type GitRef struct {
     IsTag bool
 }
 
+func getRefName(name string, isTag bool) plumbing.ReferenceName {
+    if isTag {
+        return plumbing.NewTagReferenceName(name)
+    }
+
+    return plumbing.NewBranchReferenceName(name)
+}
+
 func Fetch(ref *GitRef) (*bytes.Buffer, error) {
     fs := memfs.New()
     storer := memory.NewStorage()
 
-    reference := plumbing.NewBranchReferenceName(ref.Name)
+    reference := getRefName(ref.Name, ref.IsTag)
     repo, err := git.Clone(storer, fs, &git.CloneOptions{
         URL: ref.URL,
         ReferenceName: reference,
@@ -48,7 +56,7 @@ func Fetch(ref *GitRef) (*bytes.Buffer, error) {
 
     configFile, err := fs.Open(".tyci.yml")
     if err != nil {
-        return nil, err
+        return nil, nil
     }
 
     var content bytes.Buffer
