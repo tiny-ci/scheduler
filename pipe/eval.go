@@ -1,9 +1,9 @@
 package pipe
 
 import (
-	"errors"
+    "errors"
     "regexp"
-	"strings"
+    "strings"
 )
 
 const SemverRegex =
