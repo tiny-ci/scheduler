@@ -1,7 +1,10 @@
-.DEFAULT_GOAL := build
+.DEFAULT_GOAL := run
+
+bundle:
+	GOOS=linux go build
 
 build:
 	go build
 
-bundle:
-	GOOS=linux go build
+run: build
+	./core
