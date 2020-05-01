@@ -7,15 +7,25 @@ import (
     "github.com/tiny-ci/core/parser"
     "github.com/tiny-ci/core/pipe"
     "github.com/tiny-ci/core/schema"
+    "github.com/tiny-ci/core/types"
 )
 
 func main() {
-    ref := "master"
+    ntf := types.ApiNotification{
+        PipelineId: "507f1f77bcf86cd799439011",
+        Info: types.GitInfo{
+            URL: "https://github.com/caiertl/tmp",
+            RefName: "master",
+            IsTag: false,
+            CommitHash: "64954853e0169c930024d24563883f9ea59a0c9a",
+        },
+    }
+
     configContent, err := pipe.Fetch(&pipe.GitRef{
-        Name: ref,
-        URL:  "https://github.com/caiertl/tmp",
-        Hash: "64954853e0169c930024d24563883f9ea59a0c9a",
-        IsTag: false,
+        Name:  ntf.Info.RefName,
+        URL:   ntf.Info.URL,
+        Hash:  ntf.Info.CommitHash,
+        IsTag: ntf.Info.IsTag,
     })
 
     if err != nil {
@@ -47,18 +57,25 @@ func main() {
         log.Fatal(err)
     }
 
-    matchedJobs, err := pipe.Filter(config, ref)
+    matchedJobs, err := pipe.Filter(config, ntf.Info.RefName)
     if err != nil {
         log.Println("filter error")
         log.Fatal(err)
     }
 
-    log.Println(matchedJobs)
+    if len(matchedJobs) == 0 {
+        log.Fatal("no jobs to be processed")
+    }
 
-    rdb := db.RedisDatabase{}
-    err = rdb.Connect()
+    rdb, err := db.New("localhost:6379")
     if err != nil {
-        log.Println("redis error")
+        log.Println("redis conn error")
+        log.Fatal(err)
+    }
+
+    err = rdb.Populate(&ntf, &matchedJobs)
+    if err != nil {
+        log.Println("redis population error")
         log.Fatal(err)
     }
 }
