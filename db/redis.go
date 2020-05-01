@@ -21,12 +21,16 @@ func New(addr string) (RedisDatabase, error) {
     return rdb, rdb.client.Ping().Err()
 }
 
-func (r RedisDatabase) NewGitInfoRepr(pipeId string, key string) string {
-    return fmt.Sprintf("pipe:%s:git:%s", pipeId, key)
+func (r RedisDatabase) topLevelJobRepr(pipeId string, i int) string {
+    return fmt.Sprintf("pipe:%s:job:%d", pipeId, i)
 }
 
 func (r RedisDatabase) NewJobInfoRepr(pipeId string, key string, i int) string {
-    return fmt.Sprintf("pipe:%s:job:%d:%s", pipeId, i, key)
+    return fmt.Sprintf("%s:%s", r.topLevelJobRepr(pipeId, i), key)
+}
+
+func (r RedisDatabase) NewGitInfoRepr(pipeId string, key string) string {
+    return fmt.Sprintf("pipe:%s:git:%s", pipeId, key)
 }
 
 func (r RedisDatabase) Populate(ntf *types.ApiNotification, jobs *[]types.Job) error {
@@ -38,6 +42,7 @@ func (r RedisDatabase) Populate(ntf *types.ApiNotification, jobs *[]types.Job) e
     item[r.NewGitInfoRepr(pi, "commit_hash")] = ntf.Info.CommitHash
     item[r.NewGitInfoRepr(pi, "is_tag")]      = fmt.Sprint(ntf.Info.IsTag)
 
+    var jobList []string
     for i, job := range *jobs {
         steps, err := json.Marshal(job.Steps)
         if err != nil { return err }
@@ -45,8 +50,13 @@ func (r RedisDatabase) Populate(ntf *types.ApiNotification, jobs *[]types.Job) e
         item[r.NewJobInfoRepr(pi, "name", i)]  = job.Name
         item[r.NewJobInfoRepr(pi, "image", i)] = job.Image
         item[r.NewJobInfoRepr(pi, "steps", i)] = steps
+
+        jobList = append(jobList, r.topLevelJobRepr(pi, i))
     }
 
     res := r.client.MSet(item)
-    return res.Err()
+    if res.Err() != nil { return res.Err() }
+
+    intRes := r.client.RPush("job:queue", jobList)
+    return intRes.Err()
 }
