@@ -7,18 +7,23 @@ import (
     "github.com/tiny-ci/core/parser"
     "github.com/tiny-ci/core/pipe"
     "github.com/tiny-ci/core/schema"
-    "github.com/tiny-ci/core/types"
+    "github.com/aws/aws-lambda-go/events"
+    "github.com/aws/aws-lambda-go/lambda"
 )
 
-func main() {
-    ntf := types.ApiNotification{
-        PipelineId: "507f1f77bcf86cd799439011",
-        Info: types.GitInfo{
-            URL: "https://github.com/caiertl/tmp",
-            RefName: "master",
-            IsTag: false,
-            CommitHash: "64954853e0169c930024d24563883f9ea59a0c9a",
-        },
+func newPipeline(message string) error {
+    bmsg := []byte(message)
+
+    err := schema.ValidateNotification(bmsg)
+    if err != nil {
+        log.Println("notification validation error")
+        return err
+    }
+
+    ntf, err := parser.ParseNotification(bmsg)
+    if err != nil {
+        log.Println("notification parser error")
+        return nil
     }
 
     configContent, err := pipe.Fetch(&pipe.GitRef{
@@ -30,52 +35,76 @@ func main() {
 
     if err != nil {
         log.Println("fetch error")
-        log.Fatal(err)
+        return err
     }
 
     if err == nil && configContent == nil {
         log.Println("pipe config not found")
-        return
+        return nil
     }
 
     config, err := parser.ParsePipeConfig(configContent.Bytes())
     if err != nil {
         log.Println("parser error")
-        log.Fatal(err)
+        return err
     }
 
     var marshalledConfig []byte
     marshalledConfig, err = json.Marshal(config)
     if err != nil {
         log.Println("marshall error")
-        log.Fatal(err)
+        return err
     }
 
     err = schema.ValidateConfig(marshalledConfig)
     if err != nil {
         log.Println("validation error")
-        log.Fatal(err)
+        return err
     }
 
     matchedJobs, err := pipe.Filter(config, ntf.Info.RefName)
     if err != nil {
         log.Println("filter error")
-        log.Fatal(err)
+        return err
     }
 
     if len(matchedJobs) == 0 {
-        log.Fatal("no jobs to be processed")
+        log.Println("no jobs to be processed")
+        return nil
     }
 
     rdb, err := db.New("localhost:6379")
     if err != nil {
         log.Println("redis conn error")
-        log.Fatal(err)
+        return err
     }
 
-    err = rdb.Populate(&ntf, &matchedJobs)
+    err = rdb.Populate(ntf, &matchedJobs)
     if err != nil {
         log.Println("redis population error")
-        log.Fatal(err)
+        return err
     }
+
+    return nil
+}
+
+func handler(request events.SNSEvent) {
+    if len(request.Records) == 0 {
+        log.Println("nothing to process")
+        return
+    }
+
+    for _, record := range request.Records {
+        switch subject:= record.SNS.Subject; subject {
+        case "new_pipeline":
+            err := newPipeline(record.SNS.Message)
+            if err != nil {
+                log.Fatal(err)
+            }
+        }
+    }
+}
+
+func main() {
+    lambda.Start(handler)
 }
