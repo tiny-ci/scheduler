@@ -1,12 +1,5 @@
 package schema
 
-import (
-    "errors"
-    "encoding/json"
-    "log"
-    "github.com/qri-io/jsonschema"
-)
-
 var configSchema = []byte(`{
     "type": "object",
     "required": ["jobs"],
@@ -23,7 +16,6 @@ var configSchema = []byte(`{
                 "properties": {
                     "name": { "type": "string" },
                     "image": { "type": "string" },
-
                     "steps": {
                         "anyOf": [
                             { "type": "string" },
@@ -48,55 +40,11 @@ var configSchema = []byte(`{
                             }
                         }
                     }
-
                 }
             }
         }
     }}`)
 
-
-var notificationSchema = []byte(`{
-    "type": "object",
-    "required": ["pipeline_id", "git"],
-    "additionalProperties": false,
-    "properties": {
-        "pipeline_id": { "type": "string" },
-        "git": {
-            "type": "object",
-            "required": ["url", "ref_name", "commit_hash", "is_tag"],
-            "additionalProperties": false,
-            "properties": {
-                "url": { "type": "string" },
-                "ref_name": { "type": "string" },
-                "commit_hash": { "type": "string" },
-                "is_tag": { "type": "boolean" }
-            }
-        }
-    }
-}`)
-
-
-func validate(schema []byte, data []byte) error {
-    rs := &jsonschema.RootSchema{}
-    if err := json.Unmarshal(schema, rs); err != nil {
-        return err
-    }
-
-    if jsErrors, _ := rs.ValidateBytes(data); len(jsErrors) > 0 {
-        for _, err := range jsErrors {
-            log.Println(err)
-        }
-
-        return errors.New("")
-    }
-
-    return nil
-}
-
 func ValidateConfig(data []byte) error {
     return validate(configSchema, data)
-}
-
-func ValidateNotification(data []byte) error {
-    return validate(notificationSchema, data)
 }
