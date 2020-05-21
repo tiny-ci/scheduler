@@ -54,6 +54,28 @@ var configSchema = []byte(`{
         }
     }}`)
 
+
+var notificationSchema = []byte(`{
+    "type": "object",
+    "required": ["pipeline_id", "git"],
+    "additionalProperties": false,
+    "properties": {
+        "pipeline_id": { "type": "string" },
+        "git": {
+            "type": "object",
+            "required": ["url", "ref_name", "commit_hash", "is_tag"],
+            "additionalProperties": false,
+            "properties": {
+                "url": { "type": "string" },
+                "ref_name": { "type": "string" },
+                "commit_hash": { "type": "string" },
+                "is_tag": { "type": "boolean" }
+            }
+        }
+    }
+}`)
+
+
 func validate(schema []byte, data []byte) error {
     rs := &jsonschema.RootSchema{}
     if err := json.Unmarshal(schema, rs); err != nil {
@@ -73,4 +95,8 @@ func validate(schema []byte, data []byte) error {
 
 func ValidateConfig(data []byte) error {
     return validate(configSchema, data)
+}
+
+func ValidateNotification(data []byte) error {
+    return validate(notificationSchema, data)
 }
