@@ -25,11 +25,11 @@ func (r RedisDatabase) topLevelJobRepr(pipeId string, i int) string {
     return fmt.Sprintf("pipe:%s:job:%d", pipeId, i)
 }
 
-func (r RedisDatabase) NewJobInfoRepr(pipeId string, key string, i int) string {
+func (r RedisDatabase) newJobInfoRepr(pipeId string, key string, i int) string {
     return fmt.Sprintf("%s:%s", r.topLevelJobRepr(pipeId, i), key)
 }
 
-func (r RedisDatabase) NewGitInfoRepr(pipeId string, key string) string {
+func (r RedisDatabase) newGitInfoRepr(pipeId string, key string) string {
     return fmt.Sprintf("pipe:%s:git:%s", pipeId, key)
 }
 
@@ -37,19 +37,19 @@ func (r RedisDatabase) Populate(ntf *types.ApiNotification, jobs *[]types.Job) e
     pi := ntf.PipelineId
     item := make(map[string]interface{})
 
-    item[r.NewGitInfoRepr(pi, "repo_url")]    = ntf.Info.URL
-    item[r.NewGitInfoRepr(pi, "ref_name")]    = ntf.Info.RefName
-    item[r.NewGitInfoRepr(pi, "commit_hash")] = ntf.Info.CommitHash
-    item[r.NewGitInfoRepr(pi, "is_tag")]      = fmt.Sprint(ntf.Info.IsTag)
+    item[r.newGitInfoRepr(pi, "repo_url")]    = ntf.Info.URL
+    item[r.newGitInfoRepr(pi, "ref_name")]    = ntf.Info.RefName
+    item[r.newGitInfoRepr(pi, "commit_hash")] = ntf.Info.CommitHash
+    item[r.newGitInfoRepr(pi, "is_tag")]      = fmt.Sprint(ntf.Info.IsTag)
 
     var jobList []string
     for i, job := range *jobs {
         steps, err := json.Marshal(job.Steps)
         if err != nil { return err }
 
-        item[r.NewJobInfoRepr(pi, "name", i)]  = job.Name
-        item[r.NewJobInfoRepr(pi, "image", i)] = job.Image
-        item[r.NewJobInfoRepr(pi, "steps", i)] = steps
+        item[r.newJobInfoRepr(pi, "name", i)]  = job.Name
+        item[r.newJobInfoRepr(pi, "image", i)] = job.Image
+        item[r.newJobInfoRepr(pi, "steps", i)] = steps
 
         jobList = append(jobList, r.topLevelJobRepr(pi, i))
     }
