@@ -31,10 +31,23 @@ func toStringSlice(intf interface{}) []string {
 }
 
 func appendJob(jobs *[]types.Job, pipeJob *types.PipeJob) {
+    engine := "docker"
+    image  := "ubuntu"
+
+    if pipeJob.Engine != nil {
+        if pipeJob.Engine.Vm != "" {
+            engine = "vm"
+            image  = pipeJob.Engine.Vm
+        } else {
+            image  = pipeJob.Engine.Docker
+        }
+    }
+
     *jobs = append(*jobs, types.Job{
-        Name:  pipeJob.Name,
-        Image: pipeJob.Image,
-        Steps: toStringSlice(pipeJob.Steps),
+        Name:   pipeJob.Name,
+        Engine: engine,
+        Image:  image,
+        Steps:  toStringSlice(pipeJob.Steps),
     })
 }
 
