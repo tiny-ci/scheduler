@@ -6,8 +6,8 @@ type PipeEngine struct {
 }
 
 type PipeConditional struct {
-    Branch interface{} `json:"branch,omitempty" yaml:"branch"`
-    Tag    interface{} `json:"tag,omitempty"    yaml:"tag"`
+    Branch interface{} `json:"branch" yaml:"branch"`
+    Tag    interface{} `json:"tag"    yaml:"tag"`
 }
 
 type PipeJob struct {
