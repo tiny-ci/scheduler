@@ -47,9 +47,10 @@ func (r RedisDatabase) Populate(ntf *types.ApiNotification, jobs *[]types.Job) e
         steps, err := json.Marshal(job.Steps)
         if err != nil { return err }
 
-        item[r.newJobInfoRepr(pi, "name", i)]  = job.Name
-        item[r.newJobInfoRepr(pi, "image", i)] = job.Image
-        item[r.newJobInfoRepr(pi, "steps", i)] = steps
+        item[r.newJobInfoRepr(pi, "name", i)]   = job.Name
+        item[r.newJobInfoRepr(pi, "engine", i)] = job.Engine
+        item[r.newJobInfoRepr(pi, "image", i)]  = job.Image
+        item[r.newJobInfoRepr(pi, "steps", i)]  = steps
 
         jobList = append(jobList, r.topLevelJobRepr(pi, i))
     }
