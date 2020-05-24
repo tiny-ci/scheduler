@@ -11,11 +11,18 @@ var configSchema = []byte(`{
             "maxItems": 10,
             "items": {
                 "type": "object",
-                "required": ["name", "image", "steps"],
+                "required": ["name", "steps"],
                 "additionalProperties": false,
                 "properties": {
                     "name": { "type": "string" },
-                    "image": { "type": "string" },
+                    "engine": {
+                        "type": "object",
+                        "oneOf": [ { "required": "docker" }, { "required": "vm" } ],
+                        "properties": {
+                            "docker": { "type": "string" },
+                            "vm": { "type": "string" }
+                        }
+                    },
                     "steps": {
                         "anyOf": [
                             { "type": "string" },

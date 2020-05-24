@@ -1,15 +1,20 @@
 package types
 
+type PipeEngine struct {
+    Docker string `json:"docker" yaml:"docker"`
+    Vm     string `json:"vm"     yaml:"vm"`
+}
+
 type PipeConditional struct {
     Branch interface{} `json:"branch,omitempty" yaml:"branch"`
     Tag    interface{} `json:"tag,omitempty"    yaml:"tag"`
 }
 
 type PipeJob struct {
-    Name  string          `json:"name"  yaml:"name"`
-    Image string          `json:"image" yaml:"image"`
-    Steps interface{}     `json:"steps" yaml:"steps"`
-    When *PipeConditional `json:"when"  yaml:"when"`
+    Name   string           `json:"name"   yaml:"name"`
+    Steps  interface{}      `json:"steps"  yaml:"steps"`
+    Engine *PipeEngine      `json:"engine" yaml:"engine"`
+    When   *PipeConditional `json:"when"   yaml:"when"`
 }
 
 type PipeConfig struct {
