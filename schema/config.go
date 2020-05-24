@@ -17,30 +17,39 @@ var configSchema = []byte(`{
                     "name": { "type": "string" },
                     "engine": {
                         "type": "object",
-                        "oneOf": [ { "required": "docker" }, { "required": "vm" } ],
+                        "oneOf": [ { "required": ["docker"] }, { "required": ["vm"] } ],
+                        "additionalProperties": false,
                         "properties": {
                             "docker": { "type": "string" },
                             "vm": { "type": "string" }
                         }
                     },
                     "steps": {
-                        "anyOf": [
+                        "oneOf": [
                             { "type": "string" },
                             { "type": "array", "items": { "type": "string" } }
                         ]
                     },
                     "when": {
-                        "anyOf": [ { "type": "null" }, { "type": "object" } ],
-                        "anyOf": [ { "required": ["tag"] }, { "required": ["branch"] } ],
+                        "oneOf": [
+                            { "type": "null" },
+                            {
+                                "allOf": [
+                                    { "type": "object" },
+                                    { "oneOf": [ { "required": ["tag"] }, { "required": ["branch"] } ] }
+                                ]
+                            }
+                        ],
+                        "additionalProperties": false,
                         "properties": {
                             "tag": {
-                                "anyOf": [
+                                "oneOf": [
                                     { "type": "string" },
                                     { "type": "array", "items": { "type": "string" } }
                                 ]
                             },
                             "branch": {
-                                "anyOf": [
+                                "oneOf": [
                                     { "type": "string" },
                                     { "type": "array", "items": { "type": "string" } }
                                 ]
