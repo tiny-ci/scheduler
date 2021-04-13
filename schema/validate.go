@@ -1,6 +1,7 @@
 package schema
 
 import (
+    "context"
     "errors"
     "encoding/json"
     "log"
@@ -8,12 +9,14 @@ import (
 )
 
 func validate(schema []byte, data []byte) error {
-    rs := &jsonschema.RootSchema{}
+    ctx := context.Background()
+
+    rs := &jsonschema.Schema{}
     if err := json.Unmarshal(schema, rs); err != nil {
         return err
     }
 
-    if jsErrors, _ := rs.ValidateBytes(data); len(jsErrors) > 0 {
+    if jsErrors, _ := rs.ValidateBytes(ctx, data); len(jsErrors) > 0 {
         for _, err := range jsErrors {
             log.Println(err)
         }
