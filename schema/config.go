@@ -62,5 +62,5 @@ var configSchema = []byte(`{
     }}`)
 
 func ValidateConfig(data []byte) error {
-    return validate(configSchema, data)
+	return validate(configSchema, data)
 }

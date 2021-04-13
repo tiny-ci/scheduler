@@ -19,7 +19,6 @@ var notificationSchema = []byte(`{
         }
     }}`)
 
-
 func ValidateNotification(data []byte) error {
-    return validate(notificationSchema, data)
+	return validate(notificationSchema, data)
 }
